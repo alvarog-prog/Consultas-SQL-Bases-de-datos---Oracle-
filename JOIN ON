@@ -1,0 +1,68 @@
+Práctica 2
+
+1-Listar los nombres (sin duplicados) de las personas que figuran como árbitros en partidos donde ganó el equipo local (GolesLocal > GolesVisitante). 
+-SELECT DISTINCT Nombre FROM Persona JOIN Enfrenta ON Persona.NIF = Enfrenta.NIF
+ WHERE GolesLocal > GolesVisitante;
+
+2-Obtener las ramas (sin duplicados) de los patrocinadores que financian a clubes con más de 50.000 socios. 
+-SELECT DISTINCT p.Rama
+ FROM Financia f
+ JOIN Club c ON f.CIF_C = c.CIF
+ JOIN Patrocinador p ON f.CIF_P = p.CIF
+ WHERE c.Num_Socios > 50000;
+
+3-Listar NIF y nombre (sin duplicados) de las personas que asistieron a partidos que ganó el equipo local. 
+-SELECT DISTINCT p.NIF, p.Nombre
+ FROM Persona p
+ JOIN Asiste a ON p.NIF = a.NIF
+ JOIN Enfrenta e ON a.CIF_local = e.CIF_local AND a.CIF_visitante = e.CIF_visitante
+ WHERE e.GolesLocal > e.GolesVisitante;
+
+4-Listar NIF y nombre de todas las personas que no son jugadores. 
+-SELECT P.NIF, P.Nombre
+FROM Persona P
+WHERE P.NIF NOT IN (SELECT J.NIF FROM JUGADOR J);
+
+5-Mostrar, para cada partido ganado por el local, el nombre del club local, los goles local/visitante y el nombre del club visitante; ordenado por goles del local (desc), goles del visitante (asc) y nombre del club local (desc). 
+-SELECT c_local.Nombre AS ClubLocal, 
+       e.GolesLocal, 
+       e.GolesVisitante, 
+       c_visitante.Nombre AS ClubVisitante
+ FROM Enfrenta e
+ JOIN Club c_local ON e.CIF_local = c_local.CIF
+ JOIN Club c_visitante ON e.CIF_visitante = c_visitante.CIF
+ WHERE e.GolesLocal > e.GolesVisitante
+ ORDER BY e.GolesLocal DESC, 
+         e.GolesVisitante ASC, 
+         c_local.Nombre DESC; 
+
+6-Listar los nombres de los clubes que han ganado todos los partidos que han jugado como locales. (Se comprueba que el nº de partidos como local = nº de victorias como local). 
+-SELECT DISTINCT c.Nombre
+ FROM Club c
+ JOIN Enfrenta e ON c.CIF = e.CIF_local
+ GROUP BY c.Nombre
+ HAVING COUNT(e.CIF_local) = COUNT(CASE WHEN e.GolesLocal > e.GolesVisitante THEN 1 END);
+
+Desglose de la consulta:
+1.	SELECT DISTINCT c.Nombre: Selecciona los nombres de los clubes sin repeticiones.
+2.	FROM Club c: Comienza desde la tabla Club.
+3.	JOIN Enfrenta e ON c.CIF = e.CIF_local: Une la tabla Enfrenta para obtener los partidos jugados por los clubes como locales.
+4.	GROUP BY c.Nombre: Agrupa los resultados por el nombre del club.
+5.	HAVING COUNT(e.CIF_local) = COUNT(CASE WHEN e.GolesLocal > e.GolesVisitante THEN 1 END):
+        COUNT(e.CIF_local) cuenta el total de partidos jugados como local.
+        COUNT(CASE WHEN e.GolesLocal > e.GolesVisitante THEN 1 END) cuenta solo los partidos ganados como local.
+        La cláusula HAVING asegura que el número total de partidos jugados como local sea igual al número de partidos ganados.
+
+7-Listar los nombres (sin duplicados) de los clubes que han participado (como local o visitante) en partidos arbitrados por la persona cuyo nombre es ‘Velasco Carballo’. 
+-SELECT DISTINCT c.Nombre
+  FROM Club c
+  JOIN Enfrenta e ON c.CIF = e.CIF_local OR c.CIF = e.CIF_visitante
+  JOIN Arbitro a ON e.NIF = a.NIF
+  WHERE a.NIF IN (SELECT p.NIF FROM Persona p WHERE p.Nombre = 'Velasco Carballo');
+
+8-Listar NIF y nombre (sin duplicados) de las personas que han asistido a algún partido y que, además, son jugadores o árbitros.
+-SELECT DISTINCT p.NIF, p.Nombre FROM Persona p
+  JOIN Asiste at ON p.NIF = at.NIF
+  WHERE p.NIF IN(SELECT j.NIF FROM Jugador j)
+  OR p.NIF IN(SELECT a.NIF FROM Arbitro a);
+
