@@ -1,0 +1,92 @@
+Práctica 4
+
+1-Listar el NIF y el nombre de los jugadores que no tienen ningún patrocinio registrado (jugadores cuyo NIF no aparece en Patrocina). 
+-SELECT J.NIF, P.Nombre
+ FROM Jugador J
+ JOIN Persona P ON J.NIF = P.NIF
+ WHERE J.NIF NOT IN (SELECT PA.NIF FROM Patrocina PA);
+
+2-Obtener el CIF y el nombre de los clubes que no tienen jugadores asociados (CIF no presente en Jugador). 
+-SELECT C.CIF, C.Nombre
+ FROM Club C
+ WHERE C.CIF NOT IN (SELECT J.CIF FROM Jugador J);
+
+3-Listar los nombres de los clubes en los que todos sus jugadores (si los hay) tienen al menos una “e” en su nombre, ignorando mayúsculas/minúsculas. (Incluye clubes sin jugadores, por el NOT EXISTS vació). 
+-SELECT C.Nombre
+ FROM Club C
+ WHERE NOT EXISTS ( SELECT 1
+ FROM Jugador J
+ JOIN Persona P ON J.NIF = P.NIF
+ WHERE J.CIF = C.CIF
+ AND LOWER(P.Nombre) NOT LIKE '%e%');
+
+4-Devolver NIF y nombre de las personas que han asistido a todos los partidos en los que participó el ‘Real Madrid CF’ (ya sea como local o visitante). 
+-SELECT P.NIF, P.Nombre
+ FROM Persona P
+ JOIN Asiste A ON P.NIF = A.NIF
+ JOIN Enfrenta E ON A.CIF_local = E.CIF_local AND A.CIF_visitante = E.CIF_visitante
+ JOIN Club C1 ON E.CIF_local = C1.CIF
+ JOIN Club C2 ON E.CIF_visitante = C2.CIF
+ WHERE C1.Nombre = 'Real Madrid CF' OR C2.Nombre = 'Real Madrid CF'
+ GROUP BY P.NIF, P.Nombre
+ HAVING COUNT(*) = (
+ SELECT COUNT(*)
+ FROM Enfrenta E
+ JOIN Club C1 ON E.CIF_local = C1.CIF
+ JOIN Club C2 ON E.CIF_visitante = C2.CIF
+ WHERE C1.Nombre = 'Real Madrid CF' OR C2.Nombre = 'Real Madrid CF');
+
+5-Listar NIF y nombre de los jugadores patrocinados por todos los patrocinadores de la rama ‘Deportes’ (cubre el conjunto completo de patrocinadores de esa rama). 
+-SELECT P.NIF, P.Nombre
+ FROM Persona P
+ JOIN Jugador J ON P.NIF = J.NIF
+ JOIN Patrocina Pat ON J.NIF = Pat.NIF
+ JOIN Patrocinador Patro ON Pat.CIF = Patro.CIF
+ WHERE Patro.Rama = 'Deportes'
+ GROUP BY P.NIF, P.Nombre
+ HAVING COUNT(DISTINCT Patro.CIF) = (
+ SELECT COUNT(DISTINCT CIF)
+ FROM Patrocinador
+ WHERE Rama = 'Deportes');
+
+6-Obtener el CIF y nombre de los clubes que tienen al menos un jugador sin ningún patrocinio (existe jugador del club con COUNT(P.CIF)=0). 
+-SELECT C.CIF, C.Nombre
+ FROM Club C
+ WHERE EXISTS (
+ SELECT 1
+ FROM Jugador J LEFT
+ JOIN Patrocina P ON J.NIF = P.NIF
+ WHERE J.CIF = C.CIF
+ GROUP BY J.NIF
+ HAVING COUNT(P.CIF) = 0);
+
+7-Devolver el/los nombre(s) del club con el mayor número de socios (máximo Num_Socios). 
+-SELECT Nombre
+ FROM Club
+ WHERE Num_Socios = (
+ SELECT MAX(Num_Socios)
+ FROM Club);
+
+8-Listar NIF, nombre y altura de los jugadores cuya altura es superior a la altura media de todos los jugadores. 
+-SELECT J.NIF, P.Nombre, J.Altura
+ FROM Jugador J
+ JOIN Persona P ON J.NIF = P.NIF
+ WHERE J.Altura > (
+ SELECT AVG(Altura)
+ FROM Jugador);
+
+9-Para cada club, mostrar CIF, nombre y la diferencia absoluta entre sus socios y la media de socios de todos los clubes (columna Dif_Socios_Media). 
+-SELECT C.CIF, C.Nombre,
+ ABS(C.Num_Socios - (SELECT AVG(Num_Socios) FROM Club)) AS Dif_Socios_Media
+ FROM Club C;
+
+10-Listar NIF y nombre de los árbitros que han arbitrado en al menos dos fechas distintas y para los que existe un partido posterior con más goles del local que en un partido anterior (comparación E1 vs. E2 por fecha y goles del local).
+-SELECT A.NIF, P.Nombre
+ FROM Arbitro A
+ JOIN Persona P ON A.NIF = P.NIF
+ JOIN Enfrenta E1 ON A.NIF = E1.NIF
+ JOIN Enfrenta E2 ON A.NIF = E2.NIF
+ WHERE E1.Fecha < E2.Fecha
+ AND E1.GolesLocal < E2.GolesLocal
+ GROUP BY A.NIF, P.Nombre
+ HAVING COUNT(DISTINCT E1.Fecha) > 1;
