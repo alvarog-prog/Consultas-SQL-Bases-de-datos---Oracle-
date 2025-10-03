@@ -1,0 +1,87 @@
+Práctica 3
+
+1-Para cada club, mostrar su CIF y el número de jugadores que tiene. (contar jugadores por club). 
+-SELECT Club.CIF, COUNT(Jugador.NIF) AS NumJugadores
+ FROM Club
+ JOIN Jugador ON Club.CIF = Jugador.CIF
+ GROUP BY Club.CIF;
+
+2-Para cada club, mostrar CIF, nombre y el número total de jugadores asociados a ese club. 
+-SELECT Club.CIF, Club.Nombre, COUNT(*) AS NumJugadores
+ FROM Club
+ JOIN Jugador ON Club.CIF = Jugador.CIF
+ GROUP BY Club.CIF, Club.Nombre;
+
+3-Calcular la altura mínima, máxima y la media (redondeada a 4 decimales) de los jugadores cuyas personas se llaman con alguna “e/E” en el nombre. 
+-SELECT MIN(Altura), MAX(Altura), ROUND(AVG(Altura), 4) FROM Jugador
+ JOIN Persona ON Jugador.NIF = Persona.NIF
+ WHERE Persona.Nombre LIKE '%E%' OR Persona.Nombre LIKE '%e%';
+
+4-Listar NIF y nombre de las personas que asistieron exactamente a un único partido que ganó el local. (solo asistentes con 1 partido local-ganado). 
+-SELECT P.NIF, P.Nombre FROM Asiste A
+ JOIN Enfrenta E ON A.CIF_local = E.CIF_local AND A.CIF_visitante = E.CIF_visitante
+ JOIN Persona P ON A.NIF = P.NIF
+ WHERE E.GolesLocal > E.GolesVisitante
+ GROUP BY P.NIF, P.Nombre
+ HAVING COUNT(E.Fecha) = 1;
+
+5-Para cada árbitro que haya arbitrado al menos un partido, mostrar su NIF, nombre y la cantidad de partidos arbitrados, ordenado de mayor a menor. 
+-SELECT A.NIF, P.Nombre, COUNT(E.Fecha) AS PartidosArbitrados
+ FROM Arbitro A
+ JOIN Enfrenta E ON A.NIF = E.NIF
+ JOIN Persona P ON A.NIF = P.NIF
+ GROUP BY A.NIF, P.Nombre
+ HAVING COUNT(E.Fecha) > 0
+ ORDER BY PartidosArbitrados DESC;
+
+6-Para todos los árbitros (hayan arbitrado o no), mostrar NIF, nombre y el número de partidos arbitrados (incluyendo 0 si no han arbitrado ninguno). 
+-SELECT A.NIF, P.Nombre, COUNT(E.Fecha) AS PartidosArbitrados
+ FROM Arbitro A
+ LEFT JOIN Enfrenta E ON A.NIF = E.NIF
+ JOIN Persona P ON A.NIF = P.NIF
+ GROUP BY A.NIF, P.Nombre;
+
+7-Para cada club con financiaciones, mostrar CIF, nombre, el promedio de las cantidades financiadas y el total de registros de financiación (solo clubes con al menos una financiación). 
+-SELECT C.CIF, C.Nombre, AVG(F.Cantidad) AS PromedioFinanciaciones, COUNT(F.Cantidad) AS TotalFinanciaciones
+ FROM Club C
+ JOIN Financia F ON C.CIF = F.CIF_C
+ GROUP BY C.CIF, C.Nombre
+ HAVING COUNT(F.Cantidad) > 0;
+
+8-Para todos los clubes, mostrar CIF, nombre, el promedio de financiación (0 si no tienen) y el total de financiaciones (contando 0 si no tienen). (uso de COALESCE). 
+-SELECT C.CIF, C.Nombre, COALESCE(AVG(F.Cantidad),0) AS PromedioFinanciaciones, COUNT(F.Cantidad) AS TotalFinanciaciones
+ FROM Club C
+ LEFT JOIN Financia F ON C.CIF = F.CIF_C
+ GROUP BY C.CIF, C.Nombre;
+
+*COALESCE: Esta función se usa para manejar los valores nulos. Si un club no tiene financiaciones, AVG(F.Cantidad) y COUNT(F.Cantidad) devolverán NULL,
+           y COALESCE reemplazará esos valores con 0.*
+
+9-Para todos los clubes, mostrar CIF, nombre y la suma total financiada (0 si no tienen), ordenando de mayor a menor suma. 
+-SELECT C.CIF, C.Nombre, COALESCE(SUM(F.Cantidad),0) AS SumaFinanciaciones
+ FROM Club C
+ LEFT JOIN Financia F ON C.CIF = F.CIF_C
+ GROUP BY C.CIF, C.Nombre
+ ORDER BY SumaFinanciaciones DESC;
+
+10-Obtener los CIF de clubes que tienen más de un jugador. (agrupación por CIF con COUNT(NIF) > 1). 
+-SELECT J.CIF
+ FROM Jugador J
+ GROUP BY J.CIF
+ HAVING COUNT(J.NIF) > 1;
+
+11-Listar CIF y nombre de los clubes que tienen más de un jugador. (igual que 10, pero devolviendo también el nombre del club). 
+-SELECT C.CIF, C.Nombre
+ FROM Club C
+ JOIN Jugador J ON C.CIF = J.CIF
+ GROUP BY C.CIF, C.Nombre
+ HAVING COUNT(J.NIF) > 1;
+
+12-Para cada patrocinador, indicar cuántos clubes distintos ha patrocinado (a través de jugadores), ordenando por ese número descendente y luego por CIF ascendente. (contar DISTINCT J.CIF, incluyendo 0).
+-SELECT P.CIF AS CIF_Patrocinador, COUNT(DISTINCT J.CIF) AS NumClubesConPatrocinio
+ FROM Patrocinador P
+ LEFT JOIN Patrocina Pa ON P.CIF = Pa.CIF
+ LEFT JOIN Jugador J ON Pa.NIF = J.NIF
+ GROUP BY P.CIF
+ ORDER BY NumClubesConPatrocinio DESC, P.CIF ASC;
+
