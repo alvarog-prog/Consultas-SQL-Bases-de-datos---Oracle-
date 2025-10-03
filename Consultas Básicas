@@ -1,0 +1,49 @@
+PRÁCTICA 1 (SELECT BÁSICAS):
+
+1.Mostrar todos los campos y registros de la tabla Club. 
+-SELECT * FROM Club;
+
+2.Mostrar, de cada club, la sede y el nombre (Sede, Nombre). 
+-SELECT Sede, Nombre FROM Club;
+
+3.Listar todos los campos de los clubes cuyo número de socios está entre 70.000 y 80.000, ambos inclusive. 
+-SELECT * FROM Club WHERE Num_Socios BETWEEN 70000 AND 80000;
+
+4.Obtener el CIF de los clubes con menos de 70.000 socios. 
+-SELECT CIF FROM Club WHERE Num_Socios < 70000;
+
+5.Listar CIF y Sede de los clubes cuyo Nombre contiene la letra “u” en cualquier posición. 
+-SELECT CIF, Sede FROM Club WHERE Nombre LIKE '%u%';
+
+6.Devolver la lista de valores distintos de Num_Socios existentes en Club (sin duplicados). 
+-SELECT DISTINCT Num_Socios FROM Club;
+
+7.Listar los nombres de los clubes ordenados por Num_Socios de mayor a menor. 
+-SELECT Nombre FROM Club ORDER BY Num_Socios DESC;
+
+8.Listar los nombres de los clubes ordenados por Num_Socios descendente y, en caso de empate, por Nombre también descendente. 
+-SELECT Nombre FROM Club ORDER BY Num_Socios DESC, Nombre DESC;
+
+9.Devolver los nombres de los clubes ordenados por la longitud del nombre (LENGTH(Nombre)) de mayor a menor. 
+--SELECT Nombre FROM Club ORDER BY LENGTH(Nombre) DESC;
+
+10.Mostrar Nombre y Num_Socios con el alias “Número de aficionados” para la segunda columna. 
+-SELECT Nombre, Num_Socios AS "Número de aficionados" FROM Club;
+
+11.Mostrar Sede y el Nombre del club en mayúsculas con el alias “Nombre_Club”. 
+-SELECT Sede, UPPER(Nombre) AS "Nombre_Club" FROM Club;
+
+12.Mostrar la Sede en minúsculas (alias “Lugar”) y el CIF (alias “Identificador”) solo para clubes con más de 50.000 socios, ordenados por Num_Socios descendente y, a continuación, por CIF ascendente. 
+-SELECT LOWER(Sede) AS "Lugar", CIF AS "Identificador" FROM Club
+ WHERE Num_socios > 50000
+ ORDER BY Num_Socios DESC, CIF;
+
+13.Listar los colegios (sin duplicados) de los árbitros cuya fecha de colegiatura es en junio (MM = '06'). 
+-SELECT DISTINCT Colegio
+ FROM Arbitro
+ WHERE TO_CHAR(Fecha_colegiatura, 'MM') = '06';
+
+14.Para cada árbitro, devolver su NIF y la fecha del 10.º aniversario de su colegiatura (fecha + 120 meses) con alias “Aniversario”. 
+-SELECT NIF, ADD_MONTHS(Fecha_colegiatura, 120) AS Aniversario
+ FROM Arbitro;
+
